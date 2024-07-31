@@ -7,6 +7,6 @@ public class Main {
     
     public static void javaMain() {
         // 通过AppClassLoader加载main函数所在的类
-        InstanceKlass mainKlass = BootClassLoader.loadMainKlass();
+//        InstanceKlass mainKlass = BootClassLoader.loadMainKlass();
     }
 }

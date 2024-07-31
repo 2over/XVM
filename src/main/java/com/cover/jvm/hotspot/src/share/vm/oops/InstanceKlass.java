@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 @Data
-public class InstanceKlass {
+public class InstanceKlass extends Klass{
     
     private byte[] magic = new byte[4];
     

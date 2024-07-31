@@ -1,7 +1,10 @@
 package com.cover.jvm.hotspot.src.share.vm.oops;
 
 import com.cover.jvm.hotspot.src.share.vm.classfile.DescriptorStream2;
+import com.cover.jvm.hotspot.src.share.vm.utilities.AccessFlags;
+import lombok.Data;
 
+@Data
 public class MethodInfo {
     
     private InstanceKlass belongKlass;

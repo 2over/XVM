@@ -150,7 +150,46 @@ public class ConstantPool {
     }
     
     public String getMethodNameByDynamicInfo(int operand) {
+        // 获取MethodInfo在常量池中的index
+        int i = (int)getDataMap().get(operand);
+        int nameAndTypeIndex = i & 0xff;
         
+        // 获取NameAndTYpe的值
+        int data = (int)getDataMap().get(nameAndTypeIndex);
+        i = data >> 16;
+        
+        return (String)getDataMap().get(i);
+    }
+    
+    public String getDescriptorNameByDynamicInfo(int operand) {
+        // 获取MethodInfo在常量池中的index
+        int i = (int)getDataMap().get(operand);
+        int nameAndTypeIndex = i & 0xff;
+        
+        // 获取NameAndType的值
+        int data = (int)getDataMap().get(nameAndTypeIndex);
+        i = data & 0xff;
+        return (String)getDataMap().get(i);
+    }
+    
+    public String getClassNameByMethodHandleInfo(int operand) {
+        int i = (int)getDataMap().get(operand);
+        int methodrefInfoIndex = i & 0xFF;
+        return getClassNameByMethodInfo(methodrefInfoIndex);
+    }
+    
+    public String getMethodNameByMethodHandleInfo(int operand) {
+        int i = (int)getDataMap().get(operand);
+        int methodrefInfoIndex = i & 0xFF;
+        
+        return getMethodNameByMethodInfo(methodrefInfoIndex);
+    }
+    
+    public String getDescriptorNameByMethodHandleInfo(int operand) {
+        int i = (int)getDataMap().get(operand);
+        int methodrefInfoIndex = i & 0xFF;
+        
+        return getDescriptorNameByMethodInfo(methodrefInfoIndex);
     }
     
 }
