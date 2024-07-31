@@ -2,11 +2,15 @@ package com.cover.jvm.hotspot.src.share.vm.classfile;
 
 import com.cover.jvm.hotspot.src.share.vm.memory.ResourceObj;
 import com.cover.jvm.hotspot.src.share.vm.oops.DescriptorInfo;
+import com.cover.jvm.hotspot.src.share.vm.runtime.JavaVFrame;
+import com.cover.jvm.hotspot.src.share.vm.runtime.StackValue;
 import com.cover.jvm.hotspot.src.share.vm.utilities.BasicType;
+import lombok.Data;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@Data
 public class DescriptorStream2 extends ResourceObj {
     
     private String descriptor;
@@ -71,7 +75,7 @@ public class DescriptorStream2 extends ResourceObj {
     public Class<?>[] getParamsType() {
         Class<?>[] types = new Class[getMethodParamsSize()];
         for (int i = 0; i < getMethodParamsSize(); i++) {
-            DescriptorInfo info = getParameter().get(i);
+            DescriptorInfo info = getParameters().get(i);
             switch (info.getType()) {
                 case BasicType.T_BOOLEAN:
                     types[i] = boolean.class;
@@ -133,7 +137,7 @@ public class DescriptorStream2 extends ResourceObj {
                     vals[i] = frame.getStack().pop().getData();
                     break;
                 case BasicType.T_DOUBLE:
-                    vals[i] = frame.getStack().pop().popDouble();
+                    vals[i] = frame.getStack().popDouble();
                     break;
                 case BasicType.T_FLOAT:
                     vals[i] = frame.getStack().pop().getData();
@@ -152,19 +156,24 @@ public class DescriptorStream2 extends ResourceObj {
         Class<?> type = null;
         switch (returnElement.getType()) {
             case BasicType.T_CHAR:
-                val = frame.getStack().pop().getVal();
+                type = char.class;
                 break;
             case BasicType.T_INT:
-                val = frame.getStack().pop().getVal();
+                type = int.class;
                 break;
             case BasicType.T_OBJECT:
-                val = frame.getStack().pop().getObject();
+
+                try {
+                    type = Class.forName(returnElement.getTypeDesc().replace('/', '.'));
+                } catch (ClassNotFoundException e) {
+                    e.printStackTrace();
+                }
                 break;
             case BasicType.T_LONG:
-                val = frame.getStack().popDouble();
+                type = long.class;
                 break;
             case BasicType.T_DOUBLE:
-                val = frame.getStack().popDouble();
+                type = double.class;
                 break;
             case BasicType.T_ARRAY:
                 throw new Error("数组类型，未作处理");
@@ -172,7 +181,7 @@ public class DescriptorStream2 extends ResourceObj {
                 throw new Error("无法识别的参数类型");
         }
         
-        return val;
+        return type;
     }
     
     public void pushField(Object o, JavaVFrame frame) {

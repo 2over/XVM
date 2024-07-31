@@ -1,5 +1,8 @@
 package com.cover.jvm.hotspot.src.share.tools;
 
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+
 public class DataTranslate {
 
     private static final char[] HEX_CHAR = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
@@ -82,6 +85,118 @@ public class DataTranslate {
         
         return result;
     }
+
+    /**
+     * byte[]转int
+     */
+    public static int byteArrayToInt(byte[] bytes) {
+        int value = 0;
+        for (int i = 0; i < 4; i++) {
+            int shift = (3 -i) * 8;
+            value += (bytes[i] & 0xFF) << shift;
+        }
+        
+        return value;
+    }
     
-    public static
+    public static float byteToFloat(byte[] b) {
+        int l;
+        l = b[3];
+        l &= 0xff;
+        l |= ((long)b[2] << 8);
+        l &= 0xffff;
+        l |= ((long)b[1] << 16);
+        l &= 0xffffff;
+        l |= ((long) b[0] << 24);
+        return Float.intBitsToFloat(l);
+    }
+    
+    public static float bytesToFloat(byte[] arr, boolean littleEndian) {
+        ByteBuffer buffer = ByteBuffer.wrap(arr, 0 ,4);
+        if (littleEndian) {
+            buffer.order(ByteOrder.LITTLE_ENDIAN);
+        }
+        
+        return buffer.getFloat();
+    }
+    
+    public static byte[] floatToByte(float f) {
+        byte[] ret =  new byte[4];
+        // 将float里面的二进制串解释为int整数
+        int i = Float.floatToIntBits(f);
+        ret[0] = (byte) ((i & 0xff000000) >> 24);
+        ret[1] = (byte) ((i & 0x00ff0000) >> 16);
+        ret[2] = (byte) ((i & 0x0000ff00) >> 8);
+        ret[3] = (byte) (i & 0x000000ff);
+        return ret;
+    }
+    
+    public static Long byteToLong(byte[] input, int offset, boolean littleEndian) {
+        long value = 0;
+        // 循环读取每个字节通过移位运算完成long的8个字节拼接
+        for (int count = 0; count < 8; ++count) {
+            int shift = (littleEndian ? count : (7 - count)) << 3;
+            value |= ((long)0xff << shift) & ((long)input[offset + count] << shift);
+        }
+        
+        return value;
+    }
+    
+    public static long bytes2long(byte[] bs) throws Exception {
+        int bytes = bs.length;
+        if (bytes > 1) {
+            if ((bytes % 2) != 0 || bytes > 8) {
+                throw new Exception("not support");
+            }
+        }
+        switch (bytes) {
+            case 0:
+                return 0;
+            case 1:
+                return (long)((bs[0] & 0xff));
+            case 2:
+                return (long)((bs[0] & 0xff) << 8 | (bs[1] & 0xff));
+            case 4:
+                return (long)((bs[0] & 0xffL) << 24 | (bs[1] & 0xffL) << 16 | (bs[2] & 0xffL) << 8 | (bs[3] & 0xffL));
+            case 8:
+                return (long)((bs[0] & 0xffL) << 56 | (bs[1] & 0xffL) << 48 | (bs[2] & 0xffL) << 40 | (bs[3] & 0xffL) << 32
+                        | (bs[4] & 0xffL) << 24 | (bs[5] & 0xffL) << 16 | (bs[6] & 0xffL) << 8 | (bs[7] & 0xffL));
+            default:
+                throw new Exception("not support");
+        }
+    }
+
+    /**
+     * 是否是小端模式
+     */
+    public static double byteToDouble(byte[] arr, boolean littleEndian) {
+        ByteBuffer buffer = ByteBuffer.wrap(arr, 0, 8);
+        if (littleEndian) {
+            buffer.order(ByteOrder.LITTLE_ENDIAN);
+        }
+        return buffer.getDouble();
+    }
+    
+    public static byte[] doubleToBytes(double d) {
+        long value = Double.doubleToRawLongBits(d);
+        byte[] byteRet = new byte[8];
+        for (int i = 0; i < 8; i++) {
+            byteRet[i] = (byte)((value >> 8 * i) & 0xff);
+        }
+        
+        return byteRet;
+    }
+    
+    public static byte[] longToBytes(long v) {
+        ByteBuffer buffer = ByteBuffer.allocate(8);
+        buffer.putLong(v);
+        return buffer.array();
+    }
+    
+    public static long bytesToLong(byte[] arr) {
+        ByteBuffer buffer = ByteBuffer.wrap(arr, 0, 8);
+        return buffer.getLong();
+    }
+    
+    
 }

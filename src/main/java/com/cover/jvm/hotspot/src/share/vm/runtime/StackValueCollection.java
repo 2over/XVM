@@ -1,5 +1,7 @@
 package com.cover.jvm.hotspot.src.share.vm.runtime;
 
+import com.cover.jvm.hotspot.src.share.tools.DataTranslate;
+import com.cover.jvm.hotspot.src.share.vm.oops.ArrayOop;
 import com.cover.jvm.hotspot.src.share.vm.utilities.BasicType;
 import lombok.Data;
 import org.slf4j.Logger;
@@ -16,7 +18,7 @@ public class StackValueCollection {
     
     private Stack<StackValue> container = new Stack<>();
     
-    private StackValueCollection() {
+    public StackValueCollection() {
         
     }
     

@@ -1,5 +1,8 @@
 package com.cover.jvm.hotspot.src.share.vm.oops;
 
+import lombok.Data;
+
+@Data
 public class DescriptorInfo {
 
     /**

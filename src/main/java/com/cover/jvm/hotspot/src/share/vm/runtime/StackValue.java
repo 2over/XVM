@@ -1,5 +1,6 @@
 package com.cover.jvm.hotspot.src.share.vm.runtime;
 
+import com.cover.jvm.hotspot.src.share.tools.DataTranslate;
 import com.cover.jvm.hotspot.src.share.vm.utilities.BasicType;
 import lombok.Data;
 
