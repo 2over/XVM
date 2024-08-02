@@ -169,7 +169,7 @@ public class DataTranslate {
     /**
      * 是否是小端模式
      */
-    public static double byteToDouble(byte[] arr, boolean littleEndian) {
+    public static double bytesToDouble(byte[] arr, boolean littleEndian) {
         ByteBuffer buffer = ByteBuffer.wrap(arr, 0, 8);
         if (littleEndian) {
             buffer.order(ByteOrder.LITTLE_ENDIAN);

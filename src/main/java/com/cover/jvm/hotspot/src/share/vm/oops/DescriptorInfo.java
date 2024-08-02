@@ -20,7 +20,7 @@ public class DescriptorInfo {
     // 类型
     private String typeDesc;
     
-    private void incArrayDimentsion() {
+    public void incArrayDimension() {
         arrayDimension++;
     }
     
