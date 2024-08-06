@@ -2,8 +2,8 @@ package com.cover.jvm.hotspot.src.share.vm.classfile;
 
 import com.cover.jvm.hotspot.src.share.tools.DataTranslate;
 import com.cover.jvm.hotspot.src.share.tools.Stream;
-import com.cover.jvm.hotspot.src.share.vm.oops.ConstantPool;
-import com.cover.jvm.hotspot.src.share.vm.oops.InstanceKlass;
+import com.cover.jvm.hotspot.src.share.vm.oops.*;
+import com.cover.jvm.hotspot.src.share.vm.utilities.AccessFlags;
 import com.cover.jvm.jdk.classes.sun.misc.AppClassLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -118,6 +118,138 @@ public class ClassFileParser {
         }
 
         return klass;
+    }
+
+    private static int parseSourceFile(byte[] content, int index, InstanceKlass klass, String attrName) {
+        byte[] u2Arr = new byte[2];
+        byte[] u4Arr = new byte[4];
+        
+        AttributeInfo attributeInfo = new AttributeInfo();
+        
+        klass.getAttributeInfos().put(attrName, attributeInfo);
+        
+        // name index
+        Stream.readU2Simple(content, index, u2Arr);
+        index += 2;
+        
+        attributeInfo.setAttrNameIndex(DataTranslate.byteToUnsignedShort(u2Arr));
+        
+        // length
+        Stream.readU4Simple(content, index, u4Arr);
+        index += 4;
+        attributeInfo.setAttrLength(DataTranslate.byteArrayToInt(u4Arr));
+        
+        attributeInfo.initContainer();
+        
+        // data
+        Stream.readU2Simple(content, index, attributeInfo.getContainer());
+        index += 2;
+        
+        logger.info("\t第 " + klass.getAttributeInfos().size() + " 个属性: " + klass.getConstantPool().getDataMap().get(attributeInfo.getAttrNameIndex())
+                    + ", name index :" + attributeInfo.getAttrNameIndex()
+                    + ", length: " + attributeInfo.getAttrLength()
+                    + ", data: " + DataTranslate.byteToUnsignedShort(attributeInfo.getContainer()) 
+                    + ", ( " + klass.getConstantPool().getDataMap().get(DataTranslate.byteToUnsignedShort(attributeInfo.getContainer())) + " )");
+        
+        return index;
+    }
+
+    private static int parseMethods(byte[] content, InstanceKlass klass, int index) {
+        for (int i = 0; i < klass.getMethodLength(); i++) {
+            byte[] u2Arr = new byte[2];
+            byte[] u4Arr = new byte[4];
+
+            MethodInfo methodInfo = new MethodInfo();
+            methodInfo.setBelongKlass(klass);
+            klass.getMethods()[i] = methodInfo;
+            
+            // access flag
+            Stream.readU2Simple(content, index, u2Arr);
+            index += 2;
+            
+            methodInfo.setAccessFlags(new AccessFlags(DataTranslate.byteToUnsignedShort(u2Arr)));
+            
+            // name index
+            Stream.readU2Simple(content, index, u2Arr);
+            index += 2;
+            
+            methodInfo.setNameIndex(DataTranslate.byteToUnsignedShort(u2Arr));
+            methodInfo.setMethodName((String)methodInfo.getBelongKlass().getConstantPool().getDataMap().get(methodInfo.getNameIndex()));
+            
+            logger.info("解析方法: " + methodInfo.getMethodName());
+            
+            // descriptor index
+            Stream.readU2Simple(content, index, u2Arr);
+            index += 2;
+            
+            methodInfo.setDescriptorIndex(DataTranslate.byteToUnsignedShort(u2Arr));
+            
+        }
+        
+        return index;
+        
+    }
+
+    private static int parseFields(byte[] content, InstanceKlass klass, int index) {
+        logger.info("解析属性:");
+        for (int i = 0; i < klass.getFieldsLength(); i++) {
+            byte[] u2Arr = new byte[2];
+            FieldInfo fieldInfo = new FieldInfo();
+            klass.getFields().add(fieldInfo);
+            
+            // access flag
+            Stream.readU2Simple(content, index, u2Arr);
+            index += 2;
+            
+            fieldInfo.setAccessFlags(DataTranslate.byteToUnsignedShort(u2Arr));
+            
+            // name index
+            Stream.readU2Simple(content, index, u2Arr);
+            index += 2;
+            
+            fieldInfo.setNameIndex(DataTranslate.byteToUnsignedShort(u2Arr));
+            
+            // descriptor index
+            Stream.readU2Simple(content, index, u2Arr);
+            index += 2;
+            
+            fieldInfo.setDescriptorIndex(DataTranslate.byteToUnsignedShort(u2Arr));
+            
+            // attribute count
+            Stream.readU2Simple(content, index, u2Arr);
+            index += 2;
+            
+            fieldInfo.setAttributesCount(DataTranslate.byteToUnsignedShort(u2Arr));
+            
+            // attribute
+            if (0 != fieldInfo.getAttributesCount()) {
+                throw new Error("属性的attribute count != 0");
+            }
+            
+            logger.info("\t第 " + " 个属性: access flag: " + fieldInfo.getAccessFlags()
+                        + ", name index: " + fieldInfo.getNameIndex() 
+                        + ", descriptor index: " + fieldInfo.getDescriptorIndex()
+                        + ", attribute count: " + fieldInfo.getAttributesCount());
+        }
+        
+        return index;
+    }
+
+    private static int parseInterface(byte[] content, InstanceKlass klass, int index) {
+        byte[] u2Arr = new byte[2];
+        for (int i = 0; i < klass.getInterfacesLength(); i++) {
+            Stream.readU2Simple(content, index, u2Arr);
+            index += 2;
+
+            int val = DataTranslate.byteToUnsignedShort(u2Arr);
+            String name = klass.getConstantPool().getClassName(val);
+
+            InterfaceInfo interfaceInfo = new InterfaceInfo(val, name);
+            klass.getInterfaceInfos().add(interfaceInfo);
+
+            logger.info("\t 第 " + (i + 1) + " 个接口: " + name);
+        }
+        return index;
     }
 
     private static int parseContentPool(byte[] content, InstanceKlass klass, int index) {
