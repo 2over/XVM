@@ -5,6 +5,7 @@ import com.cover.jvm.hotspot.src.share.tools.Stream;
 import com.cover.jvm.hotspot.src.share.vm.oops.*;
 import com.cover.jvm.hotspot.src.share.vm.utilities.AccessFlags;
 import com.cover.jvm.jdk.classes.sun.misc.AppClassLoader;
+import com.sun.org.apache.bcel.internal.classfile.InnerClass;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -118,6 +119,232 @@ public class ClassFileParser {
         }
 
         return klass;
+    }
+
+    private static int parseBootstrapMethods(byte[] content, int index, InstanceKlass klass, String attrName) {
+        byte[] u2Arr = new byte[2];
+        byte[] u4Arr = new byte[4];
+
+        BootstrapMethods bootstrapMethods = new BootstrapMethods();
+        klass.getAttributeInfos().put(attrName, bootstrapMethods);
+
+        // name index
+        Stream.readU2Simple(content, index, u2Arr);
+        index += 2;
+
+        bootstrapMethods.setAttrNameIndex(DataTranslate.byteToUnsignedShort(u2Arr));
+        bootstrapMethods.setAttrName((String) klass.getConstantPool().getDataMap().get(bootstrapMethods.getAttrNameIndex()));
+
+        // length
+        Stream.readU4Simple(content, index, u4Arr);
+        index += 4;
+
+
+        bootstrapMethods.setAttrLength(DataTranslate.byteArrayToInt(u4Arr));
+
+        // inner classes num
+        Stream.readU2Simple(content, index, u2Arr);
+        index += 2;
+
+        bootstrapMethods.setNumBootstrapMethods(DataTranslate.byteToUnsignedShort(u2Arr));
+
+        logger.info("\t 第 " + klass.getAttributeInfos().size() + " 个属性: " +
+                "name: " + bootstrapMethods.getAttrName()
+                + ", num : " + bootstrapMethods.getNumBootstrapMethods());
+
+        for (int i = 0; i < bootstrapMethods.getNumBootstrapMethods(); i++) {
+            BootstrapMethods.Item item = bootstrapMethods.new Item();
+            bootstrapMethods.getBootstrapMethods().add(item);
+
+            // bootstrap method ref
+            Stream.readU2Simple(content, index, u2Arr);
+            index += 2;
+
+            item.setNumBootstrapArguments(DataTranslate.byteToUnsignedShort(u2Arr));
+            item.initContainer();
+
+            // bootstrap arguments
+            for (int j = 0; j < item.getNumBootstrapArguments(); j++) {
+                Stream.readU2Simple(content, index, u2Arr);
+                index += 2;
+
+                item.getBootstrapArguments()[j] = DataTranslate.byteToUnsignedShort(u2Arr);
+            }
+        }
+
+        return index;
+    }
+
+    private static int parseInnerClasses(byte[] content, int index, InstanceKlass klass, String attrName) {
+        byte[] u2Arr = new byte[2];
+        byte[] u4Arr = new byte[4];
+
+        InnerClasses innerClasses = new InnerClasses();
+        klass.getAttributeInfos().put(attrName, innerClasses);
+
+        // name index
+        Stream.readU2Simple(content, index, u2Arr);
+        index += 2;
+
+        innerClasses.setAttrNameIndex(DataTranslate.byteToUnsignedShort(u2Arr));
+        innerClasses.setAttrName((String) klass.getConstantPool().getDataMap().get(innerClasses.getAttrNameIndex()));
+
+        // length
+        Stream.readU4Simple(content, index, u4Arr);
+        index += 4;
+
+        innerClasses.setAttrLength(DataTranslate.byteArrayToInt(u4Arr));
+
+        // inner classes num
+        Stream.readU2Simple(content, index, u2Arr);
+        index += 2;
+
+        innerClasses.setNumOfClasses(DataTranslate.byteToUnsignedShort(u2Arr));
+
+        logger.info("\t 第 " + klass.getAttributeInfos().size() + " 个属性: "
+                + " name: " + innerClasses.getAttrName()
+                + ", classes num: " + innerClasses.getNumOfClasses());
+        for (int i = 0; i < innerClasses.getNumOfClasses(); i++) {
+            InnerClasses.Item item = innerClasses.new Item();
+
+            innerClasses.getClasses().add(item);
+
+            // inner class info index
+            Stream.readU2Simple(content, index, u2Arr);
+            index += 2;
+
+            item.setInterClassInfoIndex(DataTranslate.byteToUnsignedShort(u2Arr));
+            // outer class info index
+            Stream.readU2Simple(content, index, u2Arr);
+            index += 2;
+
+            item.setOuterClassInfoIndex(DataTranslate.byteToUnsignedShort(u2Arr));
+
+            // inner class index
+            Stream.readU2Simple(content, index, u2Arr);
+            index += 2;
+
+            item.setInnerNameIndex(DataTranslate.byteToUnsignedShort(u2Arr));
+
+            // access flags
+            Stream.readU2Simple(content, index, u2Arr);
+            index += 2;
+
+            item.setAccessFlags(new AccessFlags(DataTranslate.byteToUnsignedShort(u2Arr)));
+
+            logger.info("\t\t inter class index: " + item.getInterClassInfoIndex()
+                    + ", outer class index: " + item.getOuterClassInfoIndex()
+                    + ", inner name index: " + item.getInnerNameIndex()
+                    + ", acess flag : " + item.getAccessFlags().getFlag());
+        }
+
+        return index;
+    }
+
+    private static int parseRuntimeVisibleAnnotations(byte[] content, int index, InstanceKlass klass, String attrName) {
+        byte[] u2Arr = new byte[2];
+        byte[] u4Arr = new byte[4];
+
+        RuntimeVisibleAnnotations attributeInfo = new RuntimeVisibleAnnotations();
+        klass.getAttributeInfos().put(attrName, attributeInfo);
+
+        // name index
+        Stream.readU2Simple(content, index, u2Arr);
+        index += 2;
+
+        attributeInfo.setAttrNameIndex(DataTranslate.byteToUnsignedShort(u2Arr));
+        attributeInfo.setAttrName((String) klass.getConstantPool().getDataMap().get(attributeInfo.getAttrNameIndex()));
+
+        // length
+        Stream.readU4Simple(content, index, u4Arr);
+        index += 4;
+
+        attributeInfo.setAttrLength(DataTranslate.byteArrayToInt(u4Arr));
+
+        // annotation num
+        Stream.readU2Simple(content, index, u2Arr);
+        index += 2;
+
+        attributeInfo.setAnnotationsNum(DataTranslate.byteToUnsignedShort(u2Arr));
+
+        // annotations
+        for (int i = 0; i < attributeInfo.getAnnotationsNum(); i++) {
+            Annotation annotation = new Annotation();
+            attributeInfo.getAnnotations().add(annotation);
+
+            // type index
+            Stream.readU2Simple(content, index, u2Arr);
+            index += 2;
+
+            annotation.setTypeIndex(DataTranslate.byteToUnsignedShort(u2Arr));
+            annotation.setTypeStr((String) klass.getConstantPool().getDataMap().get(annotation.getTypeIndex()));
+
+            // elements num
+            Stream.readU2Simple(content, index, u2Arr);
+            index += 2;
+
+            annotation.setElementsNum(DataTranslate.byteToUnsignedShort(u2Arr));
+            if (0 != annotation.getElementsNum()) {
+                throw new Error("未做处理");
+            }
+
+            logger.info("\t 属性: " + attributeInfo.getAttrName()
+                    + ", name: " + annotation.getTypeStr()
+                    + ", length: " + annotation.getElementsNum());
+        }
+        return index;
+    }
+
+    private static int parseRuntimeInvisibleAnnotations(byte[] content, int index, InstanceKlass klass, String attrName) {
+        byte[] u2Arr = new byte[2];
+        byte[] u4Arr = new byte[4];
+
+        RuntimeInvisibleAnnotations attributeInfo = new RuntimeInvisibleAnnotations();
+        klass.getAttributeInfos().put(attrName, attributeInfo);
+
+        // name index
+        Stream.readU2Simple(content, index, u2Arr);
+        index += 2;
+
+        attributeInfo.setAttrNameIndex(DataTranslate.byteToUnsignedShort(u2Arr));
+        attributeInfo.setAttrName((String) klass.getConstantPool().getDataMap().get(attributeInfo.getAttrNameIndex()));
+
+        // length
+        Stream.readU4Simple(content, index, u4Arr);
+        index += 4;
+
+        attributeInfo.setAttrLength(DataTranslate.byteArrayToInt(u4Arr));
+
+        // annotations num
+        Stream.readU2Simple(content, index, u2Arr);
+        index += 2;
+
+        // annotations
+        for (int i = 0; i < attributeInfo.getAnnotationsNum(); i++) {
+            Annotation annotation = new Annotation();
+            attributeInfo.getAnnotations().add(annotation);
+
+            // type index
+            Stream.readU2Simple(content, index, u2Arr);
+            index += 2;
+
+            annotation.setTypeIndex(DataTranslate.byteToUnsignedShort(u2Arr));
+            annotation.setTypeStr((String) klass.getConstantPool().getDataMap().get(annotation.getTypeIndex()));
+
+            // elements num
+            Stream.readU2Simple(content, index, u2Arr);
+            index += 2;
+
+            annotation.setElementsNum(DataTranslate.byteToUnsignedShort(u2Arr));
+            if (0 != annotation.getElementsNum()) {
+                throw new Error("未做处理");
+            }
+
+            logger.info("\t 第 " + attributeInfo.getAnnotations().size() + " 个属性:" + attributeInfo.getAttrName()
+                    + " , name: " + annotation.getTypeStr()
+                    + " , length: " + annotation.getElementsNum());
+        }
+        return index;
     }
 
     private static int parseSourceFile(byte[] content, int index, InstanceKlass klass, String attrName) {
