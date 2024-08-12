@@ -4,7 +4,7 @@ import com.cover.jvm.hotspot.src.share.vm.oops.MethodInfo;
 import lombok.Data;
 
 @Data
-public class JavaVFrame {
+public class JavaVFrame extends VFrame {
     
     private StackValueCollection locals;
     
