@@ -798,6 +798,7 @@ public class BytecodeInterpreter extends StackObj {
                     break;
                 }
                 case Bytecodes.IADD: {
+                    logger.info("执行指令: IADD");
                     // 取出操作数栈
                     StackValue value1 = frame.getStack().pop();
                     StackValue value2 = frame.getStack().pop();
@@ -818,6 +819,7 @@ public class BytecodeInterpreter extends StackObj {
                     break;
                 }
                 case Bytecodes.LADD: {
+                    logger.info("执行指令: LADD");
                     StackValue value1 = frame.getStack().pop();
                     StackValue value2 = frame.getStack().pop();
                     // 检查操作数类型
@@ -832,6 +834,7 @@ public class BytecodeInterpreter extends StackObj {
                     break;
                 }
                 case Bytecodes.FADD: {
+                    logger.info("执行指令: FADD");
                     // 取出操作数
                     StackValue value1 = frame.getStack().pop();
                     StackValue value2 = frame.getStack().pop();
@@ -852,6 +855,7 @@ public class BytecodeInterpreter extends StackObj {
                     break;
                 }
                 case Bytecodes.DADD: {
+                    logger.info("执行指令: DADD");
                     // 取出数据
                     double v1 = frame.getStack().popDouble();
                     double v2 = frame.getStack().popDouble();
@@ -899,6 +903,7 @@ public class BytecodeInterpreter extends StackObj {
                     }
                     
                     long ret = (long)value2.getData() - (long)value1.getData();
+                    
                     logger.info("执行指令: LSUB, 运行结果: " + ret);
                     
                     frame.getStack().push(new StackValue(BasicType.T_LONG, ret));
@@ -921,10 +926,244 @@ public class BytecodeInterpreter extends StackObj {
                     float ret = (float)value2.getData() - (float)value1.getData();
                     
                     logger.info("执行指令：FSUB, 运行结果: " + ret);
+                    
                     // 压入栈
                     frame.getStack().push(new StackValue(BasicType.T_FLOAT, ret));
                     
                     break;
+                }
+                case Bytecodes.DSUB: {
+                    logger.info("执行指令: DSUB");
+                    
+                    // 取出数据
+                    double v1 = frame.getStack().popDouble();
+                    double v2 = frame.getStack().popDouble();
+                    
+                    double ret = v2 - v1;
+                    
+                    logger.info("执行指令: DSUB, 结果: " + ret);
+                    
+                    frame.getStack().pushDouble(ret);
+                    break;
+                }
+                case Bytecodes.IMUL: {
+                    logger.info("执行指令: IMUL");
+                    
+                    StackValue value1 = frame.getStack().pop();
+                    StackValue value2 = frame.getStack().pop();
+                    
+                    if (value1.getType() != BasicType.T_INT || value2.getType() != BasicType.T_INT) {
+                        logger.error("不匹配的数据类型");
+                        
+                        throw new Error("不匹配的数据类型");
+                    }
+                    
+                    int ret = (int)value2.getData() * (int)value1.getData();
+                    
+                    logger.info("\t 执行指令: IMUL, 运行结果: " + ret);
+                    
+                    frame.getStack().push(new StackValue(BasicType.T_INT, ret));
+                    
+                    break;
+                    
+                }
+                case Bytecodes.LMUL: {
+                    logger.info("执行指令: LMUL");
+
+                    StackValue value1 = frame.getStack().pop();
+                    StackValue value2 = frame.getStack().pop();
+                    
+                    if (value1.getType() != BasicType.T_LONG || value2.getType() != BasicType.T_LONG) {
+                        logger.error("不匹配的数据类型");
+                        
+                        throw new Error("不匹配的数据类型");
+                    }
+                    
+                    long ret = (long)value2.getData() * (long)value1.getData();
+                    
+                    logger.info("执行指令: LMUL, 运行结果: " + ret);
+                    
+                    frame.getStack().push(new StackValue(BasicType.T_LONG, ret));
+                    break;
+                }
+                case Bytecodes.FMUL: {
+                    logger.info("执行指令: FMUL");
+
+                    StackValue value1 = frame.getStack().pop();
+                    StackValue value2 = frame.getStack().pop();
+                    
+                    if (value1.getType() != BasicType.T_FLOAT || value2.getType() != BasicType.T_FLOAT) {
+                        logger.error("不匹配的数据类型");
+                        
+                        throw new Error("不匹配的数据类型");
+                    }
+                    
+                    float ret = (float)value2.getData() * (float)value1.getData();
+                    
+                    logger.info("执行指令: FMUL, 运行结果: " + ret);
+                    
+                    frame.getStack().push(new StackValue(BasicType.T_FLOAT, ret));
+                    
+                    break;
+                }
+                case Bytecodes.DMUL: {
+                    logger.info("执行指令: DMUL");
+
+                    double v1 = frame.getStack().popDouble();
+                    double v2 = frame.getStack().popDouble();
+                    
+                    double ret = v1 * v2;
+                    
+                    logger.info("执行指令: DMUL, 结果: " + ret);
+                    
+                    frame.getStack().pushDouble(ret);
+                    break;
+                }
+                case Bytecodes.IDIV: {
+                    logger.info("执行指令: IDIV");
+
+                    StackValue value1 = frame.getStack().pop();
+                    StackValue value2 = frame.getStack().pop();
+                    
+                    if (value1.getType() != BasicType.T_INT || value2.getType() != BasicType.T_INT) {
+                        logger.error("不匹配的数据类型");
+                        
+                        throw new Error("不匹配的数据类型");
+                    }
+                    
+                    int ret = (int)value2.getData() / (int)value1.getData();
+                    
+                    logger.info("\t 执行指令: IDIV, 运行结果: " + ret);
+                    
+                    frame.getStack().push(new StackValue(BasicType.T_INT, ret));
+                    break;
+                }
+                case Bytecodes.LDIV: {
+                    logger.info("执行指令: LDIV");
+
+                    StackValue value1 = frame.getStack().pop();
+                    StackValue value2 = frame.getStack().pop();
+                    
+                    if (value1.getType() != BasicType.T_LONG || value2.getType() != BasicType.T_LONG) {
+                        logger.error("不匹配的数据类型");
+                        
+                        throw new Error("不匹配的数据类型");
+                    }
+                    
+                    long ret = (long)value2.getData() / (long)value1.getData();
+                    
+                    logger.info("执行指令: LDIV, 运行结果: " + ret);
+                    
+                    frame.getStack().push(new StackValue(BasicType.T_LONG, ret));
+                    
+                    break;
+                }
+                case Bytecodes.FDIV: {
+                    logger.info("执行指令: FDIV");
+
+                    StackValue value1 = frame.getStack().pop();
+                    StackValue value2 = frame.getStack().pop();
+                    
+                    if (value1.getType() != BasicType.T_FLOAT || value2.getType() != BasicType.T_FLOAT) {
+                        logger.error("不匹配的数据类型");
+                        
+                        throw new Error("不匹配的数据类型");
+                    }
+                    
+                    float ret = (float)value2.getData() / (float)value1.getData();
+                    
+                    logger.info("执行指令: FDIV, 运行结果: " + ret);
+                    
+                    frame.getStack().push(new StackValue(BasicType.T_FLOAT, ret));
+                    break;
+                }
+                case Bytecodes.DDIV: {
+                    logger.info("执行指令: DDIV");
+                    double v1 = frame.getStack().popDouble();
+                    double v2 = frame.getStack().popDouble();
+                    
+                    double ret = v2 / v1;
+                    
+                    logger.info("执行指令: DDIV, 结果: " + ret);
+                    
+                    frame.getStack().pushDouble(ret);
+
+                    break;
+                }
+                case Bytecodes.IREM: {
+                    logger.info("执行指令: IREM");
+
+                    StackValue value1 = frame.getStack().pop();
+                    StackValue value2 = frame.getStack().pop();
+                    
+                    if (value1.getType() != BasicType.T_INT || value2.getType() != BasicType.T_INT) {
+                        logger.error("不匹配的数据类型");
+                        
+                        throw new Error("不匹配的数据类型");
+                    }
+                    
+                    int ret = (int)value2.getData() % (int)value1.getData();
+                    
+                    logger.info("\t 执行指令: IREM, 运行结果: " + ret);
+                    
+                    frame.getStack().push(new StackValue(BasicType.T_INT, ret));
+                    break;
+                }
+                case Bytecodes.LREM: {
+                    logger.info("执行指令: LREM");
+
+                    StackValue value1 = frame.getStack().pop();
+                    StackValue value2 = frame.getStack().pop();
+                    
+                    if (value1.getType() != BasicType.T_LONG || value2.getType() != BasicType.T_LONG) {
+                        logger.error("不匹配的数据类型");
+                        
+                        throw new Error("不匹配的数据类型");
+                    }
+                    
+                    long ret = (long)value2.getData() % (long)value1.getData();
+                    
+                    logger.info("执行指令: LREM, 运行结果: " + ret);
+                    
+                    frame.getStack().push(new StackValue(BasicType.T_LONG, ret));
+                    break;
+                }
+                case Bytecodes.FREM: {
+                    logger.info("执行指令: FREM");
+
+                    StackValue value1 = frame.getStack().pop();
+                    StackValue value2 = frame.getStack().pop();
+                    
+                    if (value1.getType() != BasicType.T_FLOAT || value2.getType() != BasicType.T_FLOAT) {
+                        logger.error("不匹配的数据类型");
+                        
+                        throw new Error("不匹配的数据类型");
+                    }
+                    
+                    float ret = (float)value2.getData() % (float)value1.getData();
+                    
+                    logger.info("执行指令: FREM, 运行结果: " + ret);
+                    
+                    frame.getStack().push(new StackValue(BasicType.T_FLOAT, ret));
+                    
+                    break;
+                }
+                case Bytecodes.DREM: {
+                    logger.info("执行指令： DREM");
+
+                    double v1 = frame.getStack().popDouble();
+                    double v2 = frame.getStack().popDouble();
+                    
+                    double ret = v2 % v1;
+                    
+                    logger.info("执行指令: DREM, 结果: " + ret);
+                    
+                    frame.getStack().pushDouble(ret);
+                    
+                    break;
+                }
+                case Bytecodes.IINC: {
+                    logger.info();
                 }
                 
             }
