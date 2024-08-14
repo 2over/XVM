@@ -1,5 +1,6 @@
 package com.cover.jvm.hotspot.src.share.vm.interpreter;
 
+import com.cover.jvm.hotspot.src.share.vm.classfile.DescriptorStream2;
 import com.cover.jvm.hotspot.src.share.vm.memory.StackObj;
 import com.cover.jvm.hotspot.src.share.vm.oops.ArrayOop;
 import com.cover.jvm.hotspot.src.share.vm.oops.ConstantPool;
@@ -10,6 +11,8 @@ import com.cover.jvm.hotspot.src.share.vm.runtime.StackValue;
 import com.cover.jvm.hotspot.src.share.vm.utilities.BasicType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.lang.reflect.Field;
 
 public class BytecodeInterpreter extends StackObj {
 
@@ -1741,7 +1744,106 @@ public class BytecodeInterpreter extends StackObj {
                     String className = method.getBelongKlass().getConstantPool().getClassNameByFieldInfo(operand);
                     String fieldName = method.getBelongKlass().getConstantPool().getFieldName(operand);
 
+                    try {
+                        Class<?> clazz = Class.forName(className.replace('/', '.'));
+                        Field field = clazz.getField(fieldName);
+                        frame.getStack().push(new StackValue(BasicType.T_OBJECT, field.get(null)));
+                    } catch (ClassNotFoundException | NoSuchFieldException | IllegalAccessException e) {
+                        e.printStackTrace();
+                    }
+                    
+                    break;
 
+                }
+                case Bytecodes.PUTSTATIC: {
+                    throw new Error("未做处理: PUTSTATIC");
+                }
+                case Bytecodes.GETFIELD: {
+                    logger.info("执行指令: GETFIELD");
+                    
+                    short operand = code.getUnsignedShort();
+                    // =====
+                    String className = method.getBelongKlass().getConstantPool().getClassNameByMethodInfo(operand);
+                    String fieldName = method.getBelongKlass().getConstantPool().getFieldName(operand);
+                    String descriptorName = method.getBelongKlass().getConstantPool().getDescriptorNameByMethodInfo(operand);
+                    
+                    logger.info("给属性赋值: " + className + ":" + fieldName + "#" + descriptorName);
+                    
+                    // =====
+                    DescriptorStream2 descriptorStream = new DescriptorStream2(descriptorName);
+                    descriptorStream.parseField();
+                    
+                    // =====
+                    Object obj = frame.getStack().pop().getObject();
+                    
+                    Class<?> clazz = null;
+                    
+                    try {
+
+                        if (null == obj || obj.equals("")) {
+                            throw new Error("此种情况未做处理");
+                        } else {
+                            clazz = obj.getClass();
+                        }
+                        Field field = clazz.getDeclaredField(fieldName);
+                        field.setAccessible(true);
+                        
+                        descriptorStream.pushField(field.get(obj), frame);
+                    } catch (NoSuchFieldException | IllegalAccessException e) {
+                        e.printStackTrace();
+                    }
+                    
+                    break;
+                }
+                case Bytecodes.PUTFIELD: {
+                    logger.info("执行指令: PUTFIELD");
+                    
+                    short operand = code.getUnsignedShort();
+                    
+                    // ====
+                    String className = method.getBelongKlass().getConstantPool().getClassNameByMethodInfo(operand);
+                    String fieldName = method.getBelongKlass().getConstantPool().getFieldName(operand);
+                    String descriptorName = method.getBelongKlass().getConstantPool().getDescriptorNameByMethodInfo(operand);
+                    
+                    // ====
+                    DescriptorStream2 descriptorStream = new DescriptorStream2(descriptorName);
+                    descriptorStream.parseField();
+
+                    Object params = descriptorStream.getFieldVal(frame);
+                    
+                    // ====
+                    Object obj = frame.getStack().pop().getObject();
+                    
+                    Class<?> clazz = null;
+
+                    try {
+                        if (null == obj || obj.equals("")) {
+                            throw new Error("此种情况未做处理");
+                        } else {
+                            clazz = obj.getClass();
+                        }
+                        Field field = clazz.getDeclaredField(fieldName);
+                        field.setAccessible(true);
+                        
+                        field.set(obj, params);
+                    } catch (NoSuchFieldException | IllegalAccessException e) {
+                        throw new RuntimeException(e);
+                    }
+
+                    break;
+                }
+                /**
+                 * 调用虚方法
+                 * 1.public修饰
+                 * 2.protected修饰
+                 */
+                case Bytecodes.INVOKEVIRTUAL: {
+                    logger.info("执行指令: INVOKEVIRTUAL");
+                    
+                    // 取出操作数
+                    short operand = code.getUnsignedShort();
+                    
+                    // 获取类名、方法名
                 }
 
             }
