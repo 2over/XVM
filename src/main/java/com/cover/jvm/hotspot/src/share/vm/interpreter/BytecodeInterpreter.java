@@ -1163,7 +1163,426 @@ public class BytecodeInterpreter extends StackObj {
                     break;
                 }
                 case Bytecodes.IINC: {
-                    logger.info();
+                    logger.info("执行指令: IINC");
+                    // 第一个操作数: slot的index
+                    int index = code.getU1Code();
+                    
+                    // 第二个操作数:增加多少
+                    int step = code.getU1Code2();
+                    
+                    // 完成运算
+                    int v = (int)frame.getLocals().get(index).getData();
+                    v += step;
+                    
+                    // 写回局部变量表
+                    frame.getLocals().add(index, new StackValue(BasicType.T_INT, v));
+                    
+                    break;
+                }
+                case Bytecodes.I2L: {
+                    logger.info("执行指令: I2L");
+                    
+                    int v = (int) frame.getStack().pop().getData();
+                    
+                    long l = v;
+                    
+                    StackValue value = new StackValue(BasicType.T_LONG, l);
+                    frame.getStack().push(value);
+                    
+                    break;
+                }
+                case Bytecodes.I2F: {
+                    logger.info("执行指令: I2F");
+                    
+                    int v = (int)frame.getStack().pop().getData();
+                    
+                    float f = v;
+                    
+                    StackValue value = new StackValue(BasicType.T_FLOAT, f);
+                    
+                    frame.getStack().push(value);
+                    
+                    break;
+                }
+                case Bytecodes.I2D: {
+                    logger.info("执行指令: I2D");
+                    
+                    int value = frame.getStack().pop().getVal();
+                    
+                    double v = value;
+                    
+                    frame.getStack().pushDouble(v);
+                    
+                    break;
+                }
+                case Bytecodes.L2I: {
+                    logger.info("执行指令: L2I");
+                    
+                    long l = (long)frame.getStack().pop().getData();
+                    
+                    int i = (int) l;
+                    
+                    frame.getStack().pushInt(i, frame);
+                    
+                    break;
+                }
+                case Bytecodes.L2F: {
+                    logger.info("执行指令: L2F");
+                    
+                    long l = (long) frame.getStack().pop().getData();
+                    
+                    float f = l;
+                    
+                    frame.getStack().push(new StackValue(BasicType.T_FLOAT, f));
+                    
+                    break;
+                }
+                case Bytecodes.L2D: {
+                    logger.info("执行指令: L2D");
+                    
+                    long l = (long) frame.getStack().pop().getData();
+                    
+                    double d = l;
+                    
+                    frame.getStack().pushDouble(d);
+                    break;
+                }
+                case Bytecodes.F2I: {
+                    logger.info("执行指令: F2I");
+                    
+                    float f = (float) frame.getStack().pop().getData();
+                    
+                    long v = (long)f;
+                    
+                    frame.getStack().push(new StackValue(BasicType.T_LONG, v));
+                    
+                    break;
+                }
+                case Bytecodes.F2L: {
+                    logger.info("执行指令: F2L");
+                    
+                    float f = (float) frame.getStack().pop().getData();
+                    
+                    long v = (long)f;
+                    
+                    frame.getStack().push(new StackValue(BasicType.T_LONG, v));
+                    
+                    break;
+                }
+                case Bytecodes.F2D: {
+                    logger.info("执行指令: F2D");
+                    
+                    float f = (float) frame.getStack().pop().getData();
+                    double v = f;
+                    
+                    frame.getStack().pushDouble(v);
+                    
+                    break;
+                }
+                case Bytecodes.D2I: {
+                    logger.info("执行指令: D2I");
+                    
+                    double d = frame.getStack().popDouble();
+                    
+                    int v = (int)d;
+                    
+                    frame.getStack().pushInt(v, frame);
+                    
+                    break;
+                }
+                case Bytecodes.D2L: {
+                    logger.info("执行指令: D2L");
+                    
+                    double d = frame.getStack().popDouble();
+                    long v = (long)d;
+                    
+                    frame.getStack().push(new StackValue(BasicType.T_LONG, v));
+                    
+                    break;
+                }
+                case Bytecodes.D2F: {
+                    logger.info("执行指令： D2F");
+                    
+                    double d = frame.getStack().popDouble();
+                    
+                    float v = (float)d;
+                    
+                    frame.getStack().push(new StackValue(BasicType.T_FLOAT, v));
+                    
+                    break;
+                }
+                case Bytecodes.I2B: {
+                    logger.info("执行指令: I2B");
+                    
+                    int i = (int)frame.getStack().pop().getData();
+                    
+                    byte v = (byte)i;
+                    
+                    frame.getStack().pushInt(v, frame);
+                    
+                    break;
+                }
+                case Bytecodes.I2C: {
+                    logger.info("执行指令: I2C");
+                    
+                    int i = (int)frame.getStack().pop().getData();
+                    char v = (char)i;
+                    
+                    frame.getStack().pushInt(v, frame);
+                    
+                    break;
+                }
+                case Bytecodes.I2S: {
+                    logger.info("执行指令: I2S");
+                    
+                    int i = (int) frame.getStack().pop().getData();
+                    
+                    short v = (short)i;
+                    
+                    frame.getStack().pushInt(v, frame);
+                    
+                    break;
+                }
+                case Bytecodes.LCMP: {
+                    logger.info("执行指令: LCMP");
+                    
+                    long l1 = (long)frame.getStack().pop().getData();
+                    long l2 = (long)frame.getStack().pop().getData();
+                    
+                    if (l1 > l2) {
+                        frame.getStack().pushInt(1, frame);
+                    } else if (l1 == l2) {
+                        frame.getStack().pushInt(0, frame);
+                    } else {
+                        frame.getStack().pushInt(-1, frame);
+                    }
+                    
+                    break;
+                }
+                case Bytecodes.FCMPL: {
+                    logger.info("执行指令: FCMPL");
+                    
+                    float f1 = (float)frame.getStack().pop().getData();
+                    float f2 = (float)frame.getStack().pop().getData();
+                    
+                    if (f1 > f2) {
+                        frame.getStack().pushInt(1, frame);
+                    } else if (f1 == f2) {
+                        frame.getStack().pushInt(0, frame);
+                    } else {
+                        frame.getStack().pushInt(-1, frame);
+                    }
+                    
+                    break;
+                }
+                case Bytecodes.FCMPG: {
+                    logger.info("执行指令: FCMPG");
+                    throw new Error("未做处理: FCMPG");
+                }
+                case Bytecodes.DCMPL: {
+                    logger.info("执行指令: DCMPL");
+                    
+                    throw new Error("未做处理: DCMPL");
+                }
+                case Bytecodes.DCMPG: {
+                    logger.info("执行指令: DCMPG");
+                    
+                    throw new Error("未做处理: DCMPG");
+                }
+                case Bytecodes.IFEQ: {
+                    logger.info("执行指令: IFEQ");
+                    
+                    int i = (int) frame.getStack().pop().getData();
+                    int operand = code.getUnsignedShort();
+                    
+                    if (0 == i) {
+                        code.inc(operand - 1 - 2);
+                    }
+                    
+                    break;
+                }
+                /**
+                 * 当栈顶int类型数据不等于0时跳转
+                 */
+                case Bytecodes.IFNE: {
+                    logger.info("执行指令: IFNE");
+                    
+                    int i = (int)frame.getStack().pop().getData();
+                    
+                    int operand = code.getUnsignedShort();
+                    
+                    if (0 != i) {
+                        code.inc(operand - 1 -2);
+                    }
+                    
+                    break;
+                }
+                case Bytecodes.IFLT: {
+                    logger.info("执行指令: IFLT");
+                    
+                    int i = (int) frame.getStack().pop().getData();
+                    int operand = code.getUnsignedShort();
+                    
+                    if (i < 0) {
+                        code.inc(operand - 1 -2);
+                    }
+                    break;
+                }
+                case Bytecodes.IFGE: {
+                    logger.info("执行指令: IFGE");
+                    
+                    int i = (int)frame.getStack().pop().getData();
+                    
+                    int operand = code.getUnsignedShort();
+                    
+                    if (i >= 0) {
+                        code.inc(operand - 1 -2);
+                    }
+                    break;
+                }
+                case Bytecodes.IFGT: {
+                    logger.info("执行指令: IFGT");
+                    
+                    int i = (int)frame.getStack().pop().getData();
+                    
+                    int operand = code.getUnsignedShort();
+                    
+                    if (i > 0) {
+                        code.inc(operand - 1 - 2);
+                    }
+                    
+                    break;
+                }
+                case Bytecodes.IFLE: {
+                    logger.info("执行指令: IFLE");
+                    
+                    int i = (int)frame.getStack().pop().getData();
+                    
+                    int operand = code.getUnsignedShort();
+                    
+                    if (i <= 0) {
+                        code.inc(operand - 1 -2);
+                    }
+                    
+                    break;
+                }
+                case Bytecodes.IF_ICMPEQ: {
+                    logger.info("执行指令: IF_ICMPEQ");
+                    
+                    // 取出比较数
+                    StackValue value1 = frame.getStack().pop();
+                    StackValue value2 = frame.getStack().pop();
+                    
+                    // 取出操作数
+                    short operand = code.getUnsignedShort();
+                    
+                    // 基本验证
+                    if (value1.getType() != BasicType.T_INT || value2.getType() != BasicType.T_INT) {
+                        logger.error("不匹配的数据类型");
+                        
+                        throw new Error("不匹配的数据类型");
+                    }
+                    
+                    // 比较
+                    if (value1.getVal() == value2.getVal()) {
+                        /**
+                         * -1: 减去IF_ICMPEQ指令占用的1B
+                         * -2: 减去操作数operand占用的2B
+                         * 
+                         * 因为跳转的位置是从该条指令的起始位置开始算的
+                         */
+                        
+                        code.inc(operand - 1 - 2);
+                    }
+                    
+                    break;
+                }
+                case Bytecodes.IF_ICMPNE: {
+                    logger.info("执行指令: IF_ICMPNE");
+                    
+                    // 取出比较数
+                    StackValue value1 = frame.getStack().pop();
+                    StackValue value2 = frame.getStack().pop();
+                    
+                    // 取出操作数
+                    short operand = code.getUnsignedShort();
+                    
+                    // 基本验证
+                    if (value1.getType() != BasicType.T_INT || value2.getType() != BasicType.T_INT) {
+                        logger.error("不匹配的数据类型");
+                        
+                        throw new Error("不匹配的数据类型");
+                    }
+                    // 比较
+                    if (value1.getVal() != value2.getVal()) {
+                        /**
+                         * -1: 减去IF_ICMPNE指令占用的1B
+                         * -2: 减去操作数operand占用的2B
+                         * 
+                         * 因为跳转的位置是从该条指令的起始位置开始算的
+                         */
+                        code.inc(operand - 1 - 2);
+                    }
+                    break;
+                }
+                case Bytecodes.IF_ICMPLT: {
+                    logger.info("执行指令: IF_ICMPLT");
+                    
+                    // 取出比较数
+                    StackValue value1 = frame.getStack().pop();
+                    StackValue value2 = frame.getStack().pop();
+                    
+                    // 取出操作数
+                    short operand = code.getUnsignedShort();
+                    
+                    // 基本验证
+                    if (value1.getType() != BasicType.T_INT || value2.getType() != BasicType.T_INT) {
+                        logger.error("不匹配的数据类型");
+                        
+                        throw new Error("不匹配的数据类型");
+                    }
+                    
+                    // 比较
+                    if (value2.getVal() < value1.getVal()) {
+                        /**
+                         * -1: 减去IF_ICMPLT指令占用的1B
+                         * -2: 减去操作数operand占用的2B
+                         * 
+                         * 因为跳转的位置是从该条指令的起始位置开始算的
+                         */
+                        code.inc(operand - 1 - 2);
+                    }
+                    
+                    break;
+                }
+                case Bytecodes.IF_ICMPGE: {
+                    logger.info("执行指令: IF_ICMPGE");
+                    
+                    // 取出比较数
+                    StackValue value1 = frame.getStack().pop();
+                    StackValue value2 = frame.getStack().pop();
+                    
+                    // 取出操作数
+                    short operand = code.getUnsignedShort();
+                    
+                    // 基本验证
+                    if (value1.getType() != BasicType.T_INT || value2.getType() != BasicType.T_INT) {
+                        logger.error("不匹配的数据类型");
+                        
+                        throw new Error("不匹配的数据类型");
+                    }
+                    
+                    // 比较
+                    if (value2.getVal() >= value1.getVal()) {
+                        /**
+                         * -1: 减去IF_ICMPGE指令占用的1B
+                         * -2: 减去操作数operand占用的2B
+                         * 
+                         * 因为跳转的位置是从该条指令的起始位置开始算的
+                         */
+                        code.inc(operand - 1 -2);
+                    }
+                    break;
                 }
                 
             }
