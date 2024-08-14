@@ -184,6 +184,45 @@ public class DescriptorStream2 extends ResourceObj {
         return type;
     }
     
+    public Object getFieldVal(JavaVFrame frame) {
+        Object val = null;
+
+        switch (returnElement.getType()) {
+            case BasicType.T_CHAR: {
+                val = frame.getStack().pop().getVal();
+
+                break;
+            }
+            case BasicType.T_INT: {
+                val = frame.getStack().pop().getVal();
+
+                break;
+            }
+            case BasicType.T_OBJECT: {
+                val = frame.getStack().pop().getObject();
+
+                break;
+            }
+            case BasicType.T_LONG: {
+                val = frame.getStack().popDouble();
+                break;
+            }
+            case BasicType.T_DOUBLE: {
+                val = frame.getStack().popDouble();
+
+                break;
+            }
+            case BasicType.T_ARRAY: {
+                throw new Error("数组类型, 未作处理");
+            }
+            default:
+                throw new Error("无法识别的参数类型");
+
+        }
+        return val;
+
+    }
+    
     public void pushField(Object o, JavaVFrame frame) {
         switch (returnElement.getType()) {
             case BasicType.T_CHAR:
