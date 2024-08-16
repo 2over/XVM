@@ -1,10 +1,13 @@
 package com.cover.jvm.hotspot.src.share.vm.interpreter;
 
+import com.cover.jvm.hotspot.src.share.vm.classfile.BootClassLoader;
 import com.cover.jvm.hotspot.src.share.vm.classfile.DescriptorStream2;
 import com.cover.jvm.hotspot.src.share.vm.memory.StackObj;
 import com.cover.jvm.hotspot.src.share.vm.oops.ArrayOop;
 import com.cover.jvm.hotspot.src.share.vm.oops.ConstantPool;
+import com.cover.jvm.hotspot.src.share.vm.oops.InstanceKlass;
 import com.cover.jvm.hotspot.src.share.vm.oops.MethodInfo;
+import com.cover.jvm.hotspot.src.share.vm.prims.JavaNativeInterface;
 import com.cover.jvm.hotspot.src.share.vm.runtime.JavaThread;
 import com.cover.jvm.hotspot.src.share.vm.runtime.JavaVFrame;
 import com.cover.jvm.hotspot.src.share.vm.runtime.StackValue;
@@ -12,7 +15,10 @@ import com.cover.jvm.hotspot.src.share.vm.utilities.BasicType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 
 public class BytecodeInterpreter extends StackObj {
 
@@ -1844,6 +1850,303 @@ public class BytecodeInterpreter extends StackObj {
                     short operand = code.getUnsignedShort();
                     
                     // 获取类名、方法名
+                    String className = method.getBelongKlass().getConstantPool().getClassNameByMethodInfo(operand);
+                    String methodName = method.getBelongKlass().getConstantPool().getMethodNameByMethodInfo(operand);
+                    String descriptorName = method.getBelongKlass().getConstantPool().getDescriptorNameByMethodInfo(operand);
+
+                    /**
+                     * 判断是系统类还是自定义类
+                     * 系统类走反射
+                     * 自定义的类自己处理
+                     */
+                    
+                    if (className.startsWith("java")) {
+                        DescriptorStream2 descriptorStream = new DescriptorStream2(descriptorName);
+                        
+                        descriptorStream.parseMethod();
+
+                        Object[] params = descriptorStream.getParamsVal(frame);
+                        Class<?>[] paramsClass = descriptorStream.getParamsType();
+
+                        Object obj = frame.getStack().pop().getObject();
+
+                        try {
+                            Method fun = obj.getClass().getMethod(methodName, paramsClass);
+                            /**
+                             * 处理:
+                             * 1.无返回值
+                             * 2.有返回值
+                             */
+                            
+                            if (BasicType.T_VOID == descriptorStream.getReturnElement().getType()) {
+                                fun.invoke(obj, params);
+                            } else {
+                                descriptorStream.pushField(fun.invoke(obj, params), frame);
+                            }
+                        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+                            throw new RuntimeException(e);
+                        }
+                    } else {
+                        InstanceKlass klass = BootClassLoader.findLoadedKlass(className.replace('/', '.'));
+                        
+                        if (null == klass) {
+                            throw new Error("类还未加载: " + className);
+                        }
+
+                        MethodInfo methodID = JavaNativeInterface.getMethodID(klass, methodName, descriptorName);
+                        if (null == methodID) {
+                            throw new Error("不存在的方法: " + methodName + "#" + descriptorName);
+                        }
+                        
+                        JavaNativeInterface.callMethod(methodID);
+                    }
+                    break;
+                }
+                /**
+                 * 调用:
+                 * 1.构造方法
+                 * 2.私有方法
+                 * 3.父类方法(super)
+                 */
+                case Bytecodes.INVOKESPECIAL: {
+                    logger.info("执行指令: INVOKESEPCIAL( java体系的借助反射实现，自己定义的类自己实现)");
+                    
+                    // 取出操作数
+                    short operand = code.getUnsignedShort();
+                    
+                    // 获取类名、方法名、方法签名
+                    String className = method.getBelongKlass().getConstantPool().getClassNameByMethodInfo(operand);
+                    String methodName = method.getBelongKlass().getConstantPool().getMethodNameByMethodInfo(operand);
+                    String descriptorName = method.getBelongKlass().getConstantPool().getDescriptorNameByMethodInfo(operand);
+                    
+                    logger.info("执行方法： " + className + ":" + methodName + "#" + descriptorName);
+                    
+                    if (className.equals("java/lang/Object") && methodName.equals("<init>")) {
+                        // code.reset();
+                        // thread.getStack().pop();
+                    }
+                    
+                    if (className.startsWith("java")) {
+                        DescriptorStream2 descriptorStream = new DescriptorStream2(descriptorName);
+                        descriptorStream.parseMethod();
+
+                        Object[] params = descriptorStream.getParamsVal(frame);
+                        Class[] paramClass = descriptorStream.getParamsType();
+
+                        /**
+                         * 1.为什么执行这步？
+                         *      因为非静态方法调用前都会压入对象指针，构建环境时给this赋值
+                         *      而Java体系，当前设计中走的是反射机制，所以需要手动完成出战，保持堆栈平衡
+                         *  2.为什么要放在参数后面?因为参数在对象引用上面
+                         *  | 参数1 |
+                         *  --------
+                         *  | 参数2 |
+                         *  --------
+                         *  | 对象引用 |
+                         *  --------
+                         */
+                        StackValue stackValue = frame.getStack().pop();
+                        if (BasicType.T_ADDRESS == stackValue.getType()) {
+                            // 因为没有去调用Object的构造方法，所以需要手动弹出栈帧
+                            // thread.getStack().pop();
+                            
+                            break;
+                        }
+                        
+                        Object object = stackValue.getObject();
+                        
+                        // 判断调用的是构造方法还是普通方法
+                        if (methodName.equals("<init>")) {
+                            try {
+                                if (null == object || object.equals("")) {
+                                    logger.info("\t NEW字节码指令未创建对象, 在这里创建");
+
+                                    Class<?> clazz = Class.forName(className.replace('/', '.'));
+                                    Constructor<?> constructor = clazz.getConstructor(paramClass);
+                                    object = constructor.newInstance(params);
+                                }
+                                
+                                if (!className.equals("java/lang/Object")) {
+                                    // 注意: 这里应该是给栈帧顶部的StackValue赋值，而不是创建新的压栈
+                                    frame.getStack().peek().setObject(object);
+                                }
+                            } catch (ClassNotFoundException | NoSuchMethodException | InvocationTargetException |
+                                     InstantiationException | IllegalAccessException e) {
+                                throw new RuntimeException(e);
+                            }
+                        } else {
+                            // java体系，非构造方法
+                            throw new Error("java体系，非构造方法，未做处理");
+                        }
+                        
+                    } else {
+                        InstanceKlass klass = BootClassLoader.findLoadedKlass(className.replace('/', '.'));
+                        if (null == klass) {
+                            logger.info("\t 开始加载未加载的类: " + className);
+                            
+                            klass = BootClassLoader.loadKlass(className.replace('/', '.'));
+                            
+                        }
+                        
+                        MethodInfo methodID = JavaNativeInterface.getMethodID(klass, methodName, descriptorName);
+                        if (null == methodID) {
+                            throw new Error("不存在的方法: " + methodName + "#" + descriptorName);
+                        }
+                        
+                        methodID.getAttributes()[0].getCode().reset();
+                        
+                        JavaNativeInterface.callMethod(methodID);
+                    }
+                    
+                    break;
+                }
+                /** 
+                 * 调用静态方法，即static修饰的方法
+                 */
+                case Bytecodes.INVOKESTATIC: {
+                    logger.info("执行指令: INVOKESTATIC");
+                    
+                    // 取出操作数
+                    short operand = code.getUnsignedShort();
+                    
+                    // 获取类名
+                    String className = method.getBelongKlass().getConstantPool().getClassNameByMethodInfo(operand);
+                    String methodName = method.getBelongKlass().getConstantPool().getMethodNameByMethodInfo(operand);
+                    String descriptorName = method.getBelongKlass().getConstantPool().getDescriptorNameByMethodInfo(operand);
+                    
+                    if (className.startsWith("java")) {
+                        DescriptorStream2 descriptorStream = new DescriptorStream2(descriptorName);
+                        descriptorStream.parseMethod();
+
+                        Object[] params = descriptorStream.getParamsVal(frame);
+                        Class<?>[] paramsClass = descriptorStream.getParamsType();
+
+                        try {
+                            Class<?> clazz = Class.forName(className.replace('/', '.'));
+                            Method func = clazz.getMethod(methodName, paramsClass);
+                            /**
+                             * 处理:
+                             * 1.无返回值
+                             * 2.有返回值
+                             */
+                            if (BasicType.T_VOID == descriptorStream.getReturnElement().getType()) {
+                                func.invoke(clazz, params);
+                            } else {
+                                descriptorStream.pushField(func.invoke(clazz, params), frame);
+                            }
+                        } catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException |
+                                 InvocationTargetException e) {
+                            throw new RuntimeException(e);
+                        }
+
+                    } else {
+                        InstanceKlass klass = BootClassLoader.findLoadedKlass(className.replace('/', '.'));
+                        
+                        // 触发类的加载
+                        if (null == klass) {
+                            logger.info("\t 开始加载未加载的类: " + className);
+                            
+                            klass = BootClassLoader.loadKlass(className.replace('/', '.'));
+                        }
+
+                        MethodInfo methodID = JavaNativeInterface.getMethodID(klass, methodName, descriptorName);
+                        
+                        if (null == methodID) {
+                            throw new Error("不存在的方法: " + methodName + "#" + descriptorName);
+                        }
+                        
+                        // 不然方法重复调用会出错。因为程序计数器上次执行玩指向的是尾部
+                        methodID.getAttributes()[0].getCode().reset();
+                        
+                        // 调用
+                        JavaNativeInterface.callStaticMethod(methodID);
+                    }
+                    break;
+                }
+                /**
+                 * 调用接口方法
+                 * 
+                 * 可以用两种方式实现:
+                 * 1.借助反射
+                 * 2.走自己的逻辑
+                 */
+                case Bytecodes.INVOKEINTERFACE: {
+                    logger.info("执行指令: INVOKEINTERFACE");
+                    
+                    short operand = code.getUnsignedShort();
+
+                    /**
+                     * 这个参数记录了调用方法的参数个数:long、double记2，其他记1
+                     * 起始没太大必要，这个数据可以通过解析函数描述符获得
+                     * 为什么还存在呢? 历史原因
+                     */
+                    
+                    code.getU1Code();
+
+                    /**
+                     * 为额外的运算元预留空间(没看懂)
+                     * 也是历史原因，可以不用管
+                     */
+                    code.getU1Code();
+                    
+                    // 获取类名、方法名、方法签名
+                    String className = method.getBelongKlass().getConstantPool().getClassNameByMethodInfo(operand);
+                    String methodName = method.getBelongKlass().getConstantPool().getMethodNameByMethodInfo(operand);
+                    String descriptorName = method.getBelongKlass().getConstantPool().getDescriptorNameByMethodInfo(operand);
+                    
+                    logger.info("执行接口方法： " + className + ":" + methodName + "#" + descriptorName);
+                    
+                    boolean self = false;
+                    if (self) {
+                        throw new Error("未做处理");
+                    } else {
+                        DescriptorStream2 descriptorStream = new DescriptorStream2(descriptorName);
+                        descriptorStream.parseMethod();
+
+                        Object[] params = descriptorStream.getParamsVal(frame);
+                        Class<?>[] paramsClass = descriptorStream.getParamsType();
+
+                        Object obj = frame.getStack().pop().getObject();
+
+                        try {
+                            Class<?> clazz = Class.forName(className.replace('/', '.'));
+                            Method fun = clazz.getMethod(methodName, paramsClass);
+
+                            /**
+                             * 处理:
+                             * 1.无返回值
+                             * 2.有返回值
+                             */
+                            if (BasicType.T_VOID == descriptorStream.getReturnElement().getType()) {
+                                fun.invoke(obj, params);
+                            } else {
+                                descriptorStream.pushField(fun.invoke(obj, params), frame);
+                            }
+                        } catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException |
+                                 InvocationTargetException e) {
+                            throw new RuntimeException(e);
+                        }
+
+                    }
+                    
+                    break;
+
+                }
+                case Bytecodes.INVOKEDYNAMIC: {
+                    logger.info("执行指令: INVOKEDYNAMIC");
+                    
+                    int code1 = code.getU1Code();
+                    int code2 = code.getU1Code();
+                    int code3 = code.getU1Code();
+                    int code4 = code.getU1Code();
+                    
+                    int index = code1 << 8 | code2;
+                    
+                    Object object = new LambdaEngine(method, index).createObject();
+                    
+                    frame.getStack().push(new StackValue(BasicType.T_OBJECT, object));
+                    
+                    break;
                 }
 
             }
