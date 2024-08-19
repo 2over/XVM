@@ -87,7 +87,11 @@ public class DescriptorStream2 extends ResourceObj {
                     types[i] = int.class;
                     break;
                 case BasicType.T_OBJECT:
-                    types[i] = Class.forName(info.getTypeDesc().replace("/", "."));
+                    try {
+                        types[i] = Class.forName(info.getTypeDesc().replace("/", "."));
+                    } catch (ClassNotFoundException e) {
+                        throw new RuntimeException(e);
+                    }
                     break;
                 case BasicType.T_LONG:
                     types[i] = long.class;

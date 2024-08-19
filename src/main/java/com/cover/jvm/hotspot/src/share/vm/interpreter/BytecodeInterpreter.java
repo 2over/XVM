@@ -1757,7 +1757,7 @@ public class BytecodeInterpreter extends StackObj {
                     } catch (ClassNotFoundException | NoSuchFieldException | IllegalAccessException e) {
                         e.printStackTrace();
                     }
-                    
+
                     break;
 
                 }
@@ -1766,24 +1766,24 @@ public class BytecodeInterpreter extends StackObj {
                 }
                 case Bytecodes.GETFIELD: {
                     logger.info("执行指令: GETFIELD");
-                    
+
                     short operand = code.getUnsignedShort();
                     // =====
                     String className = method.getBelongKlass().getConstantPool().getClassNameByMethodInfo(operand);
                     String fieldName = method.getBelongKlass().getConstantPool().getFieldName(operand);
                     String descriptorName = method.getBelongKlass().getConstantPool().getDescriptorNameByMethodInfo(operand);
-                    
+
                     logger.info("给属性赋值: " + className + ":" + fieldName + "#" + descriptorName);
-                    
+
                     // =====
                     DescriptorStream2 descriptorStream = new DescriptorStream2(descriptorName);
                     descriptorStream.parseField();
-                    
+
                     // =====
                     Object obj = frame.getStack().pop().getObject();
-                    
+
                     Class<?> clazz = null;
-                    
+
                     try {
 
                         if (null == obj || obj.equals("")) {
@@ -1793,33 +1793,33 @@ public class BytecodeInterpreter extends StackObj {
                         }
                         Field field = clazz.getDeclaredField(fieldName);
                         field.setAccessible(true);
-                        
+
                         descriptorStream.pushField(field.get(obj), frame);
                     } catch (NoSuchFieldException | IllegalAccessException e) {
                         e.printStackTrace();
                     }
-                    
+
                     break;
                 }
                 case Bytecodes.PUTFIELD: {
                     logger.info("执行指令: PUTFIELD");
-                    
+
                     short operand = code.getUnsignedShort();
-                    
+
                     // ====
                     String className = method.getBelongKlass().getConstantPool().getClassNameByMethodInfo(operand);
                     String fieldName = method.getBelongKlass().getConstantPool().getFieldName(operand);
                     String descriptorName = method.getBelongKlass().getConstantPool().getDescriptorNameByMethodInfo(operand);
-                    
+
                     // ====
                     DescriptorStream2 descriptorStream = new DescriptorStream2(descriptorName);
                     descriptorStream.parseField();
 
                     Object params = descriptorStream.getFieldVal(frame);
-                    
+
                     // ====
                     Object obj = frame.getStack().pop().getObject();
-                    
+
                     Class<?> clazz = null;
 
                     try {
@@ -1830,7 +1830,7 @@ public class BytecodeInterpreter extends StackObj {
                         }
                         Field field = clazz.getDeclaredField(fieldName);
                         field.setAccessible(true);
-                        
+
                         field.set(obj, params);
                     } catch (NoSuchFieldException | IllegalAccessException e) {
                         throw new RuntimeException(e);
@@ -1845,10 +1845,10 @@ public class BytecodeInterpreter extends StackObj {
                  */
                 case Bytecodes.INVOKEVIRTUAL: {
                     logger.info("执行指令: INVOKEVIRTUAL");
-                    
+
                     // 取出操作数
                     short operand = code.getUnsignedShort();
-                    
+
                     // 获取类名、方法名
                     String className = method.getBelongKlass().getConstantPool().getClassNameByMethodInfo(operand);
                     String methodName = method.getBelongKlass().getConstantPool().getMethodNameByMethodInfo(operand);
@@ -1859,10 +1859,10 @@ public class BytecodeInterpreter extends StackObj {
                      * 系统类走反射
                      * 自定义的类自己处理
                      */
-                    
+
                     if (className.startsWith("java")) {
                         DescriptorStream2 descriptorStream = new DescriptorStream2(descriptorName);
-                        
+
                         descriptorStream.parseMethod();
 
                         Object[] params = descriptorStream.getParamsVal(frame);
@@ -1877,7 +1877,7 @@ public class BytecodeInterpreter extends StackObj {
                              * 1.无返回值
                              * 2.有返回值
                              */
-                            
+
                             if (BasicType.T_VOID == descriptorStream.getReturnElement().getType()) {
                                 fun.invoke(obj, params);
                             } else {
@@ -1888,7 +1888,7 @@ public class BytecodeInterpreter extends StackObj {
                         }
                     } else {
                         InstanceKlass klass = BootClassLoader.findLoadedKlass(className.replace('/', '.'));
-                        
+
                         if (null == klass) {
                             throw new Error("类还未加载: " + className);
                         }
@@ -1897,7 +1897,7 @@ public class BytecodeInterpreter extends StackObj {
                         if (null == methodID) {
                             throw new Error("不存在的方法: " + methodName + "#" + descriptorName);
                         }
-                        
+
                         JavaNativeInterface.callMethod(methodID);
                     }
                     break;
@@ -1910,22 +1910,22 @@ public class BytecodeInterpreter extends StackObj {
                  */
                 case Bytecodes.INVOKESPECIAL: {
                     logger.info("执行指令: INVOKESEPCIAL( java体系的借助反射实现，自己定义的类自己实现)");
-                    
+
                     // 取出操作数
                     short operand = code.getUnsignedShort();
-                    
+
                     // 获取类名、方法名、方法签名
                     String className = method.getBelongKlass().getConstantPool().getClassNameByMethodInfo(operand);
                     String methodName = method.getBelongKlass().getConstantPool().getMethodNameByMethodInfo(operand);
                     String descriptorName = method.getBelongKlass().getConstantPool().getDescriptorNameByMethodInfo(operand);
-                    
+
                     logger.info("执行方法： " + className + ":" + methodName + "#" + descriptorName);
-                    
+
                     if (className.equals("java/lang/Object") && methodName.equals("<init>")) {
                         // code.reset();
                         // thread.getStack().pop();
                     }
-                    
+
                     if (className.startsWith("java")) {
                         DescriptorStream2 descriptorStream = new DescriptorStream2(descriptorName);
                         descriptorStream.parseMethod();
@@ -1949,12 +1949,12 @@ public class BytecodeInterpreter extends StackObj {
                         if (BasicType.T_ADDRESS == stackValue.getType()) {
                             // 因为没有去调用Object的构造方法，所以需要手动弹出栈帧
                             // thread.getStack().pop();
-                            
+
                             break;
                         }
-                        
+
                         Object object = stackValue.getObject();
-                        
+
                         // 判断调用的是构造方法还是普通方法
                         if (methodName.equals("<init>")) {
                             try {
@@ -1965,7 +1965,7 @@ public class BytecodeInterpreter extends StackObj {
                                     Constructor<?> constructor = clazz.getConstructor(paramClass);
                                     object = constructor.newInstance(params);
                                 }
-                                
+
                                 if (!className.equals("java/lang/Object")) {
                                     // 注意: 这里应该是给栈帧顶部的StackValue赋值，而不是创建新的压栈
                                     frame.getStack().peek().setObject(object);
@@ -1978,42 +1978,42 @@ public class BytecodeInterpreter extends StackObj {
                             // java体系，非构造方法
                             throw new Error("java体系，非构造方法，未做处理");
                         }
-                        
+
                     } else {
                         InstanceKlass klass = BootClassLoader.findLoadedKlass(className.replace('/', '.'));
                         if (null == klass) {
                             logger.info("\t 开始加载未加载的类: " + className);
-                            
+
                             klass = BootClassLoader.loadKlass(className.replace('/', '.'));
-                            
+
                         }
-                        
+
                         MethodInfo methodID = JavaNativeInterface.getMethodID(klass, methodName, descriptorName);
                         if (null == methodID) {
                             throw new Error("不存在的方法: " + methodName + "#" + descriptorName);
                         }
-                        
+
                         methodID.getAttributes()[0].getCode().reset();
-                        
+
                         JavaNativeInterface.callMethod(methodID);
                     }
-                    
+
                     break;
                 }
-                /** 
+                /**
                  * 调用静态方法，即static修饰的方法
                  */
                 case Bytecodes.INVOKESTATIC: {
                     logger.info("执行指令: INVOKESTATIC");
-                    
+
                     // 取出操作数
                     short operand = code.getUnsignedShort();
-                    
+
                     // 获取类名
                     String className = method.getBelongKlass().getConstantPool().getClassNameByMethodInfo(operand);
                     String methodName = method.getBelongKlass().getConstantPool().getMethodNameByMethodInfo(operand);
                     String descriptorName = method.getBelongKlass().getConstantPool().getDescriptorNameByMethodInfo(operand);
-                    
+
                     if (className.startsWith("java")) {
                         DescriptorStream2 descriptorStream = new DescriptorStream2(descriptorName);
                         descriptorStream.parseMethod();
@@ -2041,23 +2041,23 @@ public class BytecodeInterpreter extends StackObj {
 
                     } else {
                         InstanceKlass klass = BootClassLoader.findLoadedKlass(className.replace('/', '.'));
-                        
+
                         // 触发类的加载
                         if (null == klass) {
                             logger.info("\t 开始加载未加载的类: " + className);
-                            
+
                             klass = BootClassLoader.loadKlass(className.replace('/', '.'));
                         }
 
                         MethodInfo methodID = JavaNativeInterface.getMethodID(klass, methodName, descriptorName);
-                        
+
                         if (null == methodID) {
                             throw new Error("不存在的方法: " + methodName + "#" + descriptorName);
                         }
-                        
+
                         // 不然方法重复调用会出错。因为程序计数器上次执行玩指向的是尾部
                         methodID.getAttributes()[0].getCode().reset();
-                        
+
                         // 调用
                         JavaNativeInterface.callStaticMethod(methodID);
                     }
@@ -2065,14 +2065,14 @@ public class BytecodeInterpreter extends StackObj {
                 }
                 /**
                  * 调用接口方法
-                 * 
+                 *
                  * 可以用两种方式实现:
                  * 1.借助反射
                  * 2.走自己的逻辑
                  */
                 case Bytecodes.INVOKEINTERFACE: {
                     logger.info("执行指令: INVOKEINTERFACE");
-                    
+
                     short operand = code.getUnsignedShort();
 
                     /**
@@ -2080,7 +2080,7 @@ public class BytecodeInterpreter extends StackObj {
                      * 起始没太大必要，这个数据可以通过解析函数描述符获得
                      * 为什么还存在呢? 历史原因
                      */
-                    
+
                     code.getU1Code();
 
                     /**
@@ -2088,14 +2088,14 @@ public class BytecodeInterpreter extends StackObj {
                      * 也是历史原因，可以不用管
                      */
                     code.getU1Code();
-                    
+
                     // 获取类名、方法名、方法签名
                     String className = method.getBelongKlass().getConstantPool().getClassNameByMethodInfo(operand);
                     String methodName = method.getBelongKlass().getConstantPool().getMethodNameByMethodInfo(operand);
                     String descriptorName = method.getBelongKlass().getConstantPool().getDescriptorNameByMethodInfo(operand);
-                    
+
                     logger.info("执行接口方法： " + className + ":" + methodName + "#" + descriptorName);
-                    
+
                     boolean self = false;
                     if (self) {
                         throw new Error("未做处理");
@@ -2128,29 +2128,166 @@ public class BytecodeInterpreter extends StackObj {
                         }
 
                     }
-                    
+
                     break;
 
                 }
                 case Bytecodes.INVOKEDYNAMIC: {
                     logger.info("执行指令: INVOKEDYNAMIC");
-                    
+
                     int code1 = code.getU1Code();
                     int code2 = code.getU1Code();
                     int code3 = code.getU1Code();
                     int code4 = code.getU1Code();
-                    
+
                     int index = code1 << 8 | code2;
-                    
+
                     Object object = new LambdaEngine(method, index).createObject();
-                    
+
                     frame.getStack().push(new StackValue(BasicType.T_OBJECT, object));
-                    
+
                     break;
                 }
+                case Bytecodes.ATHROW: {
+                    logger.info("执行指令: ATHROW");
 
-            }
-        }
+                    // 取出栈顶元素
+                    Throwable throwable = (Throwable) frame.getStack().pop().getObject();
+
+                    throwable.printStackTrace();
+
+                    if (throwable instanceof Error) {
+                        System.exit(-1);
+                    }
+
+                    break;
+                }
+                /**
+                 * 只分配内存
+                 * Integer:没有不带参数的构造函数
+                 * String: 调用不带参数的构造函数，返回空
+                 */
+                case Bytecodes.NEW: {
+                    logger.info("执行指令: NEW");
+
+                    // 取出操作数
+                    short operand = code.getUnsignedShort();
+
+                    String className = method.getBelongKlass().getConstantPool().getClassName(operand);
+
+                    try {
+                        Class<?> clazz = Class.forName(className.replace('/', '.'));
+                        Constructor<?> constructor = clazz.getConstructor();
+
+                        Object o = constructor.newInstance();
+
+                        if (o instanceof Throwable) {
+                            frame.getStack().push(new StackValue(BasicType.T_Throwable, o));
+                        } else {
+                            frame.getStack().push(new StackValue(BasicType.T_OBJECT, o));
+                        }
+                    } catch (ClassNotFoundException e) {
+                        e.printStackTrace();
+                    } catch (InvocationTargetException e) {
+                        e.printStackTrace();
+                    } catch (NoSuchMethodException e) {
+                        /**
+                         * 如果没有无参构造函数，就传null,保证栈帧平衡
+                         * 后面调用到构造方法的时候进行判断处理
+                         */
+                        frame.getStack().push(new StackValue(BasicType.T_OBJECT, null));
+                    } catch (InstantiationException e) {
+                        e.printStackTrace();
+                    } catch (IllegalAccessException e) {
+                        e.printStackTrace();
+                    }
+
+                    break;
+                }
+                case Bytecodes.NEWARRAY: {
+                    logger.info("执行指令: NEWARRAY");
+
+                    int arrSize = frame.getStack().pop().getVal();
+
+                    int arrType = code.getU1Code();
+
+                    ArrayOop array = new ArrayOop(arrType, arrSize);
+
+                    frame.getStack().pushArray(array, frame);
+                    break;
+                }
+                case Bytecodes.ANEWARRAY: {
+                    logger.info("执行指令: ANEWARRAY");
+
+                    int arrSize = frame.getStack().pop().getVal();
+
+                    int arrTypeIndex = code.getUnsignedShort();
+
+                    String name = method.getBelongKlass().getConstantPool().getClassName(arrTypeIndex);
+
+                    ArrayOop array = new ArrayOop(BasicType.T_OBJECT, name, arrSize);
+
+                    frame.getStack().pushArray(array, frame);
+
+                    break;
+                }
+                case Bytecodes.ARRAYLENGTH: {
+                    logger.info("执行指令: ARRAYLENGTH");
+
+                    ArrayOop o = frame.getStack().popArray(frame);
+
+                    frame.getStack().pushInt(o.getSize(), frame);
+
+                    break;
+                }
+                case Bytecodes.CHECKCAST: {
+                    logger.info("执行指令: CHECKCASE");
+
+                    // 取出操作数
+                    short operand = code.getUnsignedShort();
+
+                    String className = method.getBelongKlass().getConstantPool().getClassName(operand);
+
+                    // 取出栈顶元素
+//                    Object o = frame.getStack().pop().getObject();
+//                    System.out.println(o.getClass().getSimpleName());
+                    break;
+                }
+                case Bytecodes.IFNULL: {
+                    logger.info("执行指令: IFNULL");
+
+                    // 取出操作数
+                    short operand = code.getUnsignedShort();
+
+                    Object o = frame.getStack().pop().getData();
+
+                    // 比较
+                    if (null == o) {
+                        code.inc(operand - 1 - 2);
+                    }
+
+                    break;
+                }
+                case Bytecodes.IFNONNULL: {
+                    logger.info("执行指令: IFNONNULL");
+
+                    // 取出操作数
+                    short operand = code.getUnsignedShort();
+
+                    Object o = frame.getStack().pop().getData();
+
+                    // 比较
+                    if (null != o) {
+                        code.inc(operand - 1 - 2);
+                    }
+
+                    break;
+                }
+                default: {
+                    throw new Error("无效指令");
+                }
+            } /* end switch */
+        } /* end while */
 
     }
 }
