@@ -23,7 +23,7 @@ public class MethodInfo {
     
     private DescriptorStream2 descriptor;
     
-    private void initAttributeContainer() {
+    public void initAttributeContainer() {
         attributes = new CodeAttributeInfo[attributesCount];
     }
 
