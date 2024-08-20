@@ -42,6 +42,10 @@ public class StackValue {
         this.data = DataTranslate.floatToByte(val);
     }
     
+    public StackValue(int type, long v) {
+        this.type = type;
+        this.data = DataTranslate.longToBytes(v);
+    }
     public Object getData() {
         switch (type) {
             case BasicType.T_OBJECT:

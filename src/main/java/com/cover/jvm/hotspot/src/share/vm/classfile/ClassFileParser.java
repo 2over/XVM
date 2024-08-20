@@ -41,7 +41,7 @@ public class ClassFileParser {
         // 常量池 N字节
         index = parseContentPool(content, klass, index);
         
-        // 类的访问庆权限 2B
+        // 类的访问权限 2B
         Stream.readU2Simple(content, index, u2Arr);
         index += 2;
         
@@ -108,11 +108,13 @@ public class ClassFileParser {
                 index = parseRuntimeInvisibleAnnotations(content, index, klass, attrName);
             } else if (attrName.equals("RuntimeVisibleAnnotations")) {
                 index = parseRuntimeVisibleAnnotations(content, index, klass, attrName);
-            } else if (attrName.equals("InnerClasses")) {
-                index = parseInnerClasses(content, index, klass, attrName);
-            } else if (attrName.equals("BootstrapMethods")) {
-                index = parseBootstrapMethods(content, index, klass, attrName);
-            } else {
+            }
+//            else if (attrName.equals("InnerClasses")) {
+//                index = parseInnerClasses(content, index, klass, attrName);
+//            } else if (attrName.equals("BootstrapMethods")) {
+//                index = parseBootstrapMethods(content, index, klass, attrName);
+//            } 
+            else {
                 throw new Error("无法识别的类属性:" + attrName);
             }
             
@@ -436,7 +438,7 @@ public class ClassFileParser {
                 throw new Error("方法的属性不止一个");
             }
             
-            for (int j = 0; i < methodInfo.getAttributesCount(); j++) {
+            for (int j = 0; j < methodInfo.getAttributesCount(); j++) {
                 CodeAttributeInfo attributeInfo = new CodeAttributeInfo();
                 
                 methodInfo.getAttributes()[j] = attributeInfo;
@@ -505,7 +507,7 @@ public class ClassFileParser {
                     
                     if (attrName.equals("LineNumberTable")) {
                         index = parseLineNumberTable(content, index, attrName, attributeInfo);
-                    } else if (attrName.equals("LocalVaraibleTable")) {
+                    } else if (attrName.equals("LocalVariableTable")) {
                         index = parseLocalVariableTable(content, index, attrName, attributeInfo);
                     } else if (attrName.equals("StackMapTable")) {
                         index = parseStackMapTable(content, index, attrName, attributeInfo);
@@ -660,6 +662,12 @@ public class ClassFileParser {
         index += 4;
         
         lineNumberTable.setAttrLength(DataTranslate.byteArrayToInt(u4Arr));
+        
+        // table length
+        Stream.readU2Simple(content, index, u2Arr);
+        index += 2;
+        
+        lineNumberTable.setTableLength(DataTranslate.byteToUnsignedShort(u2Arr));
         
         lineNumberTable.initTable();
         

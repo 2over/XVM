@@ -14,7 +14,7 @@ public class Main {
     
     public static void javaMain() {
         // 通过AppClassLoader加载main函数所在的类
-        InstanceKlass mainKlass = BootClassLoader.loadMainKlass("com.cover.jvm.example.java.lang.operation.Add");
+        InstanceKlass mainKlass = BootClassLoader.loadMainKlass("com.cover.jvm.example.java.lang.operation.BitCount");
         
         // 找到main方法
         MethodInfo mainMethod = JavaNativeInterface.getMethodID(mainKlass, "main", "([Ljava/lang/String;)V");

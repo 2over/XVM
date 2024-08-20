@@ -117,8 +117,10 @@ public class ConstantPool {
         // 获取NameAndType在常量池中的index
         int data = (int)getDataMap().get(index);
         int i =  data & 0xFF;
+        
         int nameAndType = (int)getDataMap().get(i);
         i = nameAndType >> 16;
+        
         return (String)getDataMap().get(i);
     }
     

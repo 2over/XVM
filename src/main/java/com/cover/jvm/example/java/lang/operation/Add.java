@@ -1,10 +1,6 @@
 package com.cover.jvm.example.java.lang.operation;
 
-/**
- * Created By ziya
- * QQ: 3039277701
- * 2021/4/6
- */
+
 public class Add {
 
     public static void main(String[] args) {
@@ -12,6 +8,7 @@ public class Add {
         addFloat();
         addLong();
         addDouble();
+        add();
     }
 
     public static void addInt() {
@@ -40,6 +37,23 @@ public class Add {
         double b = 2;
 
         System.out.println(a + b);
+    }
+
+    public static void add() {
+        byte b = 1;
+        char c = 2;
+        short s = 3;
+        int i = 4;
+        long l = 5;
+
+        System.out.println(b + c + s + i);
+    }
+
+    public static void test1() {
+        byte b = 1;
+        char c = 2;
+
+        System.out.println(b + c);
     }
 
 }

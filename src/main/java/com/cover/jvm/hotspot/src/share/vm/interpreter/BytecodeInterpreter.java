@@ -61,6 +61,7 @@ public class BytecodeInterpreter extends StackObj {
                 case Bytecodes.ICONST_1: {
                     logger.info("执行指令: ICONST_1");
                     frame.getStack().push(new StackValue(BasicType.T_INT, 1));
+                    break;
                 }
                 case Bytecodes.ICONST_2: {
                     logger.info("执行指令: ICONST_2");
@@ -355,6 +356,19 @@ public class BytecodeInterpreter extends StackObj {
                     frame.getStack().push(value1);
                     frame.getStack().push(value2);
 
+                    break;
+                }
+                case Bytecodes.DLOAD_2: {
+                    logger.info("执行指令: DLOAD_2");
+                    
+                    // 取出数据
+                    StackValue value1 = frame.getLocals().get(2);
+                    StackValue value2 = frame.getLocals().get(3);
+                    
+                    // 压入栈
+                    frame.getStack().push(value1);
+                    frame.getStack().push(value2);
+                    
                     break;
                 }
                 case Bytecodes.DLOAD_3: {

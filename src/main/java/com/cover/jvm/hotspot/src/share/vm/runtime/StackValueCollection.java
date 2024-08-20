@@ -15,7 +15,10 @@ import java.util.Stack;
 public class StackValueCollection {
     
     private Logger logger = LoggerFactory.getLogger(StackValueCollection.class);
-    
+
+    /********************************
+     * 模拟操作数栈
+     */
     private Stack<StackValue> container = new Stack<>();
     
     public StackValueCollection() {
@@ -40,7 +43,7 @@ public class StackValueCollection {
      */
     public void pushDouble(double val) {
         byte[] bytes = DataTranslate.doubleToBytes(val);
-        ByteBuffer buffer = ByteBuffer.wrap(bytes, 0, 0);
+        ByteBuffer buffer = ByteBuffer.wrap(bytes, 0, 8);
         push(new StackValue(BasicType.T_DOUBLE, buffer.getInt(0)));
         // 为了后面取数据
         buffer.order(ByteOrder.LITTLE_ENDIAN);
