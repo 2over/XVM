@@ -137,7 +137,7 @@ public class BytecodeInterpreter extends StackObj {
                     logger.info("执行指令: SIPUSH");
 
                     // 获取操作数栈
-                    int val = code.getU1Code();
+                    int val = code.getUnsignedShort();
 
                     // 操作数入栈(操作数栈)
                     frame.getStack().push(new StackValue(BasicType.T_INT, val));

@@ -108,13 +108,11 @@ public class ClassFileParser {
                 index = parseRuntimeInvisibleAnnotations(content, index, klass, attrName);
             } else if (attrName.equals("RuntimeVisibleAnnotations")) {
                 index = parseRuntimeVisibleAnnotations(content, index, klass, attrName);
-            }
-//            else if (attrName.equals("InnerClasses")) {
-//                index = parseInnerClasses(content, index, klass, attrName);
-//            } else if (attrName.equals("BootstrapMethods")) {
-//                index = parseBootstrapMethods(content, index, klass, attrName);
-//            } 
-            else {
+            } else if (attrName.equals("InnerClasses")) {
+                index = parseInnerClasses(content, index, klass, attrName);
+            } else if (attrName.equals("BootstrapMethods")) {
+                index = parseBootstrapMethods(content, index, klass, attrName);
+            } else {
                 throw new Error("无法识别的类属性:" + attrName);
             }
             
@@ -159,6 +157,12 @@ public class ClassFileParser {
             bootstrapMethods.getBootstrapMethods().add(item);
 
             // bootstrap method ref
+            Stream.readU2Simple(content, index, u2Arr);
+            index += 2;
+            
+            item.setBootstrapMethodRef(DataTranslate.byteToUnsignedShort(u2Arr));
+            
+            // num bootstrap arguments
             Stream.readU2Simple(content, index, u2Arr);
             index += 2;
 
