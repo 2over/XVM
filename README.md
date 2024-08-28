@@ -29,18 +29,23 @@ public class HelloWorld {
 其实在class文件中,虚拟机是有自己的规范的,按照一定的顺序来存放的,顺序如下:
 ![img_1.png](img_1.png)
 1.魔数 4B(CAFE BABE)
+
 2.次版本号 2B
+
 3.主版本号 2B
+
 4.常量池大小 2B
+
 5.类的访问权限 2B
+
 6.类名 2B
+
 7.父类名 2B
+
 8.实现的接口个数2B、实现的接口
-9.属
-10.方法数量 2B
-11.方法
-12.属性数量 2B
-13.属性
+
+9.属性数量2B、属性
+10.方法数量2B、方法
 在HotSpot源码中，class字节码文件解析的过程在/hotspot/src/share/vm/classfile/classFileParser.cpp中的parseClassFile方法当中
 #### Java对象在C++中的存储形式
 
