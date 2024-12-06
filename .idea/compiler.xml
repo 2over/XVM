@@ -9,5 +9,8 @@
         <module name="XVM" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="XVM" target="1.8" />
+    </bytecodeTargetLevel>
   </component>
 </project>
