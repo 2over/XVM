@@ -9,6 +9,8 @@ import com.cover.jvm.hotspot.src.share.vm.runtime.Threads;
 
 public class Main {
     public static void main(String[] args) {
+        System.loadLibrary("jni");
+        com.cover.jvm.jdk.classes.Threads.createVM();
         javaMain();
     }
     
