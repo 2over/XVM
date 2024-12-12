@@ -2,7 +2,7 @@ package com.cover.jvm.jdk.classes;
 
 public final class Handle {
     
-    // oop、klass的内存地址
+    //oop/klass memory address
     private long p;
 
     /**
