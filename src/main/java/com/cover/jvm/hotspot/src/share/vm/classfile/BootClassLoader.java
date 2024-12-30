@@ -18,7 +18,8 @@ public class BootClassLoader {
      * 多个路径以分号分割
      * 只有一个的话，分号可以省略
      */
-    private static String searchPath = "D:\\my\\github\\my_jvm\\target\\classes\\";
+    // FIXME  更换路径
+    private static String searchPath = "/home/ziya/Documents/XVM/target/classes/";
 
     /**
      * 用于存储该类加载器加载的所有类
