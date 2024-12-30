@@ -6,12 +6,26 @@ import com.cover.jvm.hotspot.src.share.vm.oops.MethodInfo;
 import com.cover.jvm.hotspot.src.share.vm.prims.JavaNativeInterface;
 import com.cover.jvm.hotspot.src.share.vm.runtime.JavaThread;
 import com.cover.jvm.hotspot.src.share.vm.runtime.Threads;
+import com.cover.jvm.jdk.classes.Handle;
+import com.cover.jvm.jdk.classes.JniEnv;
+import com.cover.jvm.jdk.classes.sun.misc.AppClassLoader;
 
 public class Main {
     public static void main(String[] args) {
         System.loadLibrary("jni");
-        com.cover.jvm.jdk.classes.Threads.createVM();
-        javaMain();
+        com.cover.jvm.Threads.createVM();
+//        javaMain();
+        
+        // 找到main方法所在的类
+        Handle klassHandle = AppClassLoader.loadKlass("com/cover/jvm/example/java/lang/HelloWorld");
+
+        Handle methodHandle = JniEnv.getMethodID(klassHandle, "main", "([Ljava/lang/String;)V");
+        
+        JniEnv.CallStaticVoidMethod(klassHandle, methodHandle);
+        
+        
+
+
     }
     
     public static void javaMain() {
